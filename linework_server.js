@@ -28,8 +28,8 @@ app.use(session({
 
 app.get('/', function(req, res) {
 	console.log("Root route."); //debug
-	console.log(">>>" + __dirname + "/views/start.ejs"); //debug
-	res.sendFile(__dirname + "/views/start.ejs");
+	console.log(">>>" + __dirname + "/public/html/start.html"); //debug
+	res.sendFile(__dirname + "/public/html/start.html");
 });
 
 // app.get('/start', function(req, res) {
