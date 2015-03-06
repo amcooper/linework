@@ -14,6 +14,7 @@ var sampleRoute = [{stationName: "Lorimer St", latitude: 40.714067, longitude: -
   {stationName: "Broadway Jct", latitude: 40.678862, longitude: -73.903272}];
 var finalList = [];
 var bigArray = [];
+var request;
 
 function initialize () {
   console.log("function: initialize");
@@ -23,39 +24,21 @@ function initialize () {
 		mapTypeId : google.maps.MapTypeId.ROADMAP
 	};
 	var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
-	// directionsDisplay = new google.maps.DirectionsRenderer();
-	// directionsDisplay.setMap(map);
-	// directionsDisplay.setPanel(document.getElementById('directions-panel'));
 }
 
+function topTwenty() {
+  console.log("topTwenty starts."); //debug
+  compileAll();
+  console.log("compileAll complete."); //debug
+  setTimeout(bigSort(), 3000);
+  console.log("bigSort complete."); //debug
+  setTimeout(function(){for (var k=0; k<20; k++) { console.log(bigArray[k]); }}, 3000);
+  console.log("topTwenty complete."); //debug    
+}
 
-function topTen() {
- function callback(results, status) {
-    console.log("function callback"); //debug
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      for (var ii = 0; ii < results.length; ii++) {
-        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
-        bigArray.push(results[ii]);
-      }
-      // console.log("bigArray: " + JSON.stringify(bigArray)); //debug
-    }
-  }
-
-// Pseudocode
-
-// Big array. Initialize array variable for All results.
-
-// Loop : for each station
-//   var map?
-//   do the search
-//   Loop : for each result
-//     add the distance to the result
-//     add distance/rating to the result
-//   Loop - end
-//   push the objects to the Big Array
-// Loop - end
-
-  for (j=0; j<sampleRoute.length; j++) {
+function compileAll() {
+  console.log("compileAll starts."); //debug
+  for (var j=0; j<sampleRoute.length; j++) {
 
     console.log("Outer loop j: " + j.toString()); //debug
     var dummyMap = new google.maps.Map(document.getElementById("dummyMap"),
@@ -66,21 +49,48 @@ function topTen() {
       }
     );
     var service = new google.maps.places.PlacesService(dummyMap);
-    var request = {
+    request = {
       query : document.getElementById('search_term').value,
       location : new google.maps.LatLng(sampleRoute[j].latitude, sampleRoute[j].longitude),
       radius : 500
     };
-    // console.log("request: " + JSON.stringify(request));
+    // console.log("request: " + JSON.stringify(request)); //debug
     service.textSearch(request, callback);
   }
 
-  console.log("bigArray: " + JSON.stringify(bigArray)); //debug
+  function callback(results, status) {
+    console.log("function callback starts."); //debug
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      for (var ii = 0; ii < results.length; ii++) {
+        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
+        if (results[ii].rating > 0) {
+          var place = results[ii].geometry.location;
+          results[ii].distance = google.maps.geometry.spherical.computeDistanceBetween(request.location,place);
+          // console.log("distance: " + results[ii].distance); //debug
+          results[ii].myRank = parseFloat(results[ii].distance)/parseFloat(results[ii].rating);
+          bigArray.push(results[ii]);
+        }
+      }
+    }
+  }
+}
+
+  // console.log("bigArray: " + JSON.stringify(bigArray)); //debug
 
 // Sort big array by quotient
+function bigSort() {
+  console.log("bigSort starts."); //debug
 
-// Top twenty go onto page.
+  function compare(a,b) {
+    if (a.myRank < b.myRank)
+       return -1;
+    if (a.myRank > b.myRank)
+      return 1;
+    return 0;
+  }
 
+  bigArray.sort(compare);
 }
+// Top twenty go onto page.
 
 google.maps.event.addDomListener(window, 'load', initialize);
