@@ -13,8 +13,10 @@ var sampleRoute = [{stationName: "Lorimer St", latitude: 40.714067, longitude: -
   {stationName: "Bushwick Av - Aberdeen St", latitude: 40.682808, longitude: -73.905257}, 
   {stationName: "Broadway Jct", latitude: 40.678862, longitude: -73.903272}];
 var finalList = [];
+var bigArray = [];
 
 function initialize () {
+  console.log("function: initialize");
 	var mapProp = {
 		center : new google.maps.LatLng(40.739888, -73.990075),
 		zoom : 11,
@@ -28,20 +30,20 @@ function initialize () {
 
 
 function topTen() {
-
-//   Pseudocode
-
-// Big array. Initialize array variable for All results.
-  var bigArray = [];
-
-  function callback(results, status) {
+ function callback(results, status) {
+    console.log("function callback"); //debug
     if (status == google.maps.places.PlacesServiceStatus.OK) {
       for (var ii = 0; ii < results.length; ii++) {
-        console.log(JSON.stringify(results[ii]));
+        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
         bigArray.push(results[ii]);
       }
+      // console.log("bigArray: " + JSON.stringify(bigArray)); //debug
     }
   }
+
+// Pseudocode
+
+// Big array. Initialize array variable for All results.
 
 // Loop : for each station
 //   var map?
@@ -54,20 +56,26 @@ function topTen() {
 // Loop - end
 
   for (j=0; j<sampleRoute.length; j++) {
-    console.log("Outer loop j: " + j.toString());
-    var service = new google.map.places.PlacesService();
+
+    console.log("Outer loop j: " + j.toString()); //debug
+    var dummyMap = new google.maps.Map(document.getElementById("dummyMap"),
+      {
+        center : new google.maps.LatLng(40.739888, -73.990075),
+        zoom : 11,
+        mapTypeId : google.maps.MapTypeId.ROADMAP
+      }
+    );
+    var service = new google.maps.places.PlacesService(dummyMap);
     var request = {
       query : document.getElementById('search_term').value,
       location : new google.maps.LatLng(sampleRoute[j].latitude, sampleRoute[j].longitude),
       radius : 500
     };
+    // console.log("request: " + JSON.stringify(request));
     service.textSearch(request, callback);
-  };
+  }
 
-  console.log("bigArray: " + bigArray);
-  console.log("bigArray: " + bigArray.toString());
-  console.log("bigArray: " + JSON.stringify(bigArray));
-
+  console.log("bigArray: " + JSON.stringify(bigArray)); //debug
 
 // Sort big array by quotient
 
