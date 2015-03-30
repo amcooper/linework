@@ -29,6 +29,22 @@ function initialize () {
 
 function compileAll() {
   console.log("compileAll starts."); //debug
+  function callback(results, status) {
+    console.log("function callback starts."); //debug
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      for (var ii = 0; ii < results.length; ii++) {
+        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
+        if (results[ii].rating > 0) {
+          var place = results[ii].geometry.location;
+          results[ii].distance = google.maps.geometry.spherical.computeDistanceBetween(request.location,place);
+          // console.log("distance: " + results[ii].distance); //debug
+          results[ii].myRank = parseFloat(results[ii].distance)/parseFloat(results[ii].rating);
+          bigArray.push(results[ii]);
+        }
+      }
+    }
+  }
+
 // Sort big array by quotient
   function bigSort() {
     console.log("bigSort starts."); //debug
@@ -70,22 +86,6 @@ function compileAll() {
 
   }
 
-  function callback(results, status) {
-    console.log("function callback starts."); //debug
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      for (var ii = 0; ii < results.length; ii++) {
-        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
-        if (results[ii].rating > 0) {
-          var place = results[ii].geometry.location;
-          results[ii].distance = google.maps.geometry.spherical.computeDistanceBetween(request.location,place);
-          // console.log("distance: " + results[ii].distance); //debug
-          results[ii].myRank = parseFloat(results[ii].distance)/parseFloat(results[ii].rating);
-          bigArray.push(results[ii]);
-        }
-      }
-    }
-  }
-
 
   for (var j=0; j<sampleRoute.length; j++) {
 
@@ -103,14 +103,14 @@ function compileAll() {
       location : new google.maps.LatLng(sampleRoute[j].latitude, sampleRoute[j].longitude),
       radius : 500
     };
-    // console.log("request: " + JSON.stringify(request)); //debug
+    console.log("request: " + JSON.stringify(request)); //debug
     service.textSearch(request, callback);
   }
 
   bigSort();
 }
 
-compileAll();
+// compileAll(); // This isn't really needed here.
 
 
 google.maps.event.addDomListener(window, 'load', initialize);
