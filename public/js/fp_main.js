@@ -15,6 +15,7 @@ var sampleRoute = [{stationName: "Lorimer St", latitude: 40.714067, longitude: -
 var finalList = [];
 var bigArray = [];
 var request;
+var map;
 
 function initialize () {
   console.log("function: initialize");
@@ -23,21 +24,69 @@ function initialize () {
 		zoom : 11,
 		mapTypeId : google.maps.MapTypeId.ROADMAP
 	};
-	var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
-}
-
-function topTwenty() {
-  console.log("topTwenty starts."); //debug
-  compileAll();
-  console.log("compileAll complete."); //debug
-  setTimeout(bigSort(), 3000);
-  console.log("bigSort complete."); //debug
-  setTimeout(function(){for (var k=0; k<20; k++) { console.log(bigArray[k]); }}, 3000);
-  console.log("topTwenty complete."); //debug    
+	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 }
 
 function compileAll() {
   console.log("compileAll starts."); //debug
+// Sort big array by quotient
+  function bigSort() {
+    console.log("bigSort starts."); //debug
+
+    function fullDisplay() {
+      console.log("fullDisplay starts.");
+      for (var m=0; m<20; m++) {
+          var marker = new google.maps.Marker({
+              position: new google.maps.LatLng(bigArray[m].geometry.location.k, bigArray[m].geometry.location.D),
+              map: map,
+              title: request.query
+          });
+          var olElement=document.getElementById("searchResultList");
+          var liElement=document.createElement("li");
+          liElement.innerHTML="<span style='font-size:12pt;font-family:serif'>" + bigArray[m].name + "</span><br>" + "<span style='font-size:10pt;font-family:serif'>" + bigArray[m].formatted_address + "</span>";
+          olElement.appendChild(liElement);
+      }
+
+      console.log("all done.");
+    }
+
+    function compare(a,b) {
+      if (a.myRank < b.myRank)
+         return -1;
+      if (a.myRank > b.myRank)
+        return 1;
+      return 0;
+    }
+
+    bigArray.sort(compare);
+
+    console.log("Length: " + bigArray.length); //debug
+    if (bigArray.length>20) { 
+      bigArray.slice(0,19); 
+      console.log("Array sliced"); //debug
+    }
+
+    fullDisplay();
+
+  }
+
+  function callback(results, status) {
+    console.log("function callback starts."); //debug
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      for (var ii = 0; ii < results.length; ii++) {
+        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
+        if (results[ii].rating > 0) {
+          var place = results[ii].geometry.location;
+          results[ii].distance = google.maps.geometry.spherical.computeDistanceBetween(request.location,place);
+          // console.log("distance: " + results[ii].distance); //debug
+          results[ii].myRank = parseFloat(results[ii].distance)/parseFloat(results[ii].rating);
+          bigArray.push(results[ii]);
+        }
+      }
+    }
+  }
+
+
   for (var j=0; j<sampleRoute.length; j++) {
 
     console.log("Outer loop j: " + j.toString()); //debug
@@ -58,39 +107,10 @@ function compileAll() {
     service.textSearch(request, callback);
   }
 
-  function callback(results, status) {
-    console.log("function callback starts."); //debug
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      for (var ii = 0; ii < results.length; ii++) {
-        // console.log("results[ii]: " + JSON.stringify(results[ii])); //debug
-        if (results[ii].rating > 0) {
-          var place = results[ii].geometry.location;
-          results[ii].distance = google.maps.geometry.spherical.computeDistanceBetween(request.location,place);
-          // console.log("distance: " + results[ii].distance); //debug
-          results[ii].myRank = parseFloat(results[ii].distance)/parseFloat(results[ii].rating);
-          bigArray.push(results[ii]);
-        }
-      }
-    }
-  }
+  bigSort();
 }
 
-  // console.log("bigArray: " + JSON.stringify(bigArray)); //debug
+compileAll();
 
-// Sort big array by quotient
-function bigSort() {
-  console.log("bigSort starts."); //debug
-
-  function compare(a,b) {
-    if (a.myRank < b.myRank)
-       return -1;
-    if (a.myRank > b.myRank)
-      return 1;
-    return 0;
-  }
-
-  bigArray.sort(compare);
-}
-// Top twenty go onto page.
 
 google.maps.event.addDomListener(window, 'load', initialize);
