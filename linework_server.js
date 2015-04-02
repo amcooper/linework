@@ -1,5 +1,6 @@
 // linework_server.js
 
+var async = require('async');
 var express = require('express');
 var ejs = require('ejs');
 var session = require('express-session');
